@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoDistance Pro | Advanced Distance Calculator</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --info: #560bad;
+            --radius: 12px;
+            --shadow: 0 10px 20px rgba(0,0,0,0.1);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .logo i {
+            font-size: 2.5rem;
+            color: var(--primary);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #6c757d;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .input-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-field {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .input-field i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--accent);
+            z-index: 1;
+        }
+
+        input {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            font-size: 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: var(--radius);
+            background-color: #f8f9fa;
+            transition: var(--transition);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 14px rgba(0,0,0,0.15);
+            background: linear-gradient(to right, var(--secondary), var(--primary));
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background: #adb5bd;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn i {
+            font-size: 1.2rem;
+        }
+
+        #result {
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            background-color: white;
+            margin-bottom: 2rem;
+            display: none;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .result-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .result-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .location-card {
+            background: #f8f9fa;
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            transition: var(--transition);
+        }
+
+        .location-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .location-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        .location-address {
+            color: #6c757d;
+            margin-bottom: 1rem;
+        }
+
+        .location-coords {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .coord-item {
+            background: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .distance-card {
+            grid-column: span 2;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: var(--radius);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .distance-card {
+                grid-column: span 1;
+            }
+        }
+
+        .distance-value {
+            font-size: 3rem;
+            font-weight: 700;
+            margin: 1rem 0;
+        }
+
+        .distance-unit {
+            font-size: 1.5rem;
+            opacity: 0.8;
+        }
+
+        .unit-toggle {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .unit-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .unit-btn.active {
+            background: white;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .unit-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        #map-container {
+            position: relative;
+            height: 500px;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        .map-controls {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .map-btn {
+            background: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--dark);
+        }
+
+        .map-btn:hover {
+            background: var(--primary);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .recent-searches {
+            background: white;
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+
+        .recent-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+
+        .recent-item {
+            background: #f8f9fa;
+            padding: 0.6rem 1.2rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .recent-item i {
+            color: var(--accent);
+        }
+
+        .recent-item:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .recent-item:hover i {
+            color: white;
+        }
+
+        .empty-state {
+            color: #6c757d;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--dark);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        /* Animation classes */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(67, 97, 238, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(67, 97, 238, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(67, 97, 238, 0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="fade-in">
+            <div class="logo">
+                <i class="fas fa-map-marked-alt"></i>
+                <h1>GeoDistance Pro</h1>
+            </div>
+            <p class="subtitle">Calculate precise distances between any two locations worldwide with interactive mapping</p>
+        </header>
+
+        <main>
+            <div class="card fade-in">
+                <div class="input-group">
+                    <div class="input-field">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <input type="text" id="place1" placeholder="Enter origin (e.g., Eiffel Tower, Paris)" autocomplete="off">
+                    </div>
+                    <div class="input-field">
+                        <i class="fas fa-flag-checkered"></i>
+                        <input type="text" id="place2" placeholder="Enter destination (e.g., Colosseum, Rome)" autocomplete="off">
+                    </div>
+                </div>
+                <button class="btn pulse" onclick="calculateDistance()">
+                    <i class="fas fa-calculator"></i> Calculate Distance
+                </button>
+            </div>
+
+            <div id="result" class="card">
+                <div class="result-header">
+                    <h2 class="result-title">Distance Calculation</h2>
+                    <button class="btn" onclick="printResults()">
+                        <i class="fas fa-print"></i> Print
+                    </button>
+                </div>
+                <div class="result-content" id="result-content"></div>
+            </div>
+
+            <div id="map-container" class="fade-in">
+                <div id="map"></div>
+                <div class="map-controls">
+                    <button class="map-btn" title="Zoom in" onclick="map.zoomIn()">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <button class="map-btn" title="Zoom out" onclick="map.zoomOut()">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button class="map-btn" title="Locate me" onclick="locateUser()">
+                        <i class="fas fa-location-arrow"></i>
+                    </button>
+                    <button class="map-btn" title="Fullscreen" onclick="toggleFullscreen()">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="recent-searches fade-in">
+                <h3 class="section-title">
+                    <i class="fas fa-history"></i> Recent Searches
+                </h3>
+                <div class="recent-list" id="recent-list">
+                    <div class="empty-state">No recent searches yet</div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="fade-in">
+            <p>GeoDistance Pro &copy; 2025 | Powered by OpenStreetMap and Leaflet</p>
+        </footer>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // Global variables
+        let map;
+        let markers = [];
+        let routeControl;
+        let useMiles = false;
+        let recentSearches = JSON.parse(localStorage.getItem('recentSearches')) || [];
+        let fullscreen = false;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initMap();
+            updateRecentSearches();
+            
+            // Add event listeners for Enter key
+            document.querySelectorAll('input').forEach(input => {
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') calculateDistance();
+                });
+            });
+        });
+
+        // Initialize the map
+        function initMap() {
+            map = L.map('map', {
+                zoomControl: false,
+                attributionControl: false
+            }).setView([20, 0], 2);
+
+            // Add tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // Add scale control
+            L.control.scale({ imperial: false, metric: true }).addTo(map);
+
+            // Add attribution
+            L.control.attribution({ prefix: false }).addTo(map);
+        }
+
+        // Main calculation function
+        async function calculateDistance() {
+            const place1 = document.getElementById('place1').value.trim();
+            const place2 = document.getElementById('place2').value.trim();
+            
+            if (!place1 || !place2) {
+                showToast('Please enter both locations', 'error');
+                return;
+            }
+
+            const button = document.querySelector('.btn.pulse');
+            button.disabled = true;
+            button.innerHTML = '<div class="spinner"></div> Calculating...';
+            
+            try {
+                const response = await fetch('/calculate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ place1, place2 })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayResults(data);
+                    showMap(data);
+                    addToRecentSearches(place1, place2);
+                    showToast('Distance calculated successfully!', 'success');
+                } else {
+                    showToast(data.error || 'An error occurred', 'error');
+                }
+            } catch (error) {
+                showToast('Network error. Please try again.', 'error');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-calculator"></i> Calculate Distance';
+            }
+        }
+
+        // Display results in the UI
+        function displayResults(data) {
+            const resultDiv = document.getElementById('result');
+            const distance = useMiles ? data.distance_miles : data.distance_km;
+            const unit = useMiles ? 'miles' : 'kilometers';
+            
+            document.getElementById('result-content').innerHTML = `
+                <div class="location-card">
+                    <h3 class="location-title">Starting Point</h3>
+                    <p class="location-address">${data.place1}</p>
+                    <div class="location-coords">
+                        <span class="coord-item">
+                            <i class="fas fa-latitude"></i> ${data.coord1[0].toFixed(4)}°
+                        </span>
+                        <span class="coord-item">
+                            <i class="fas fa-longitude"></i> ${data.coord1[1].toFixed(4)}°
+                        </span>
+                    </div>
+                    <button class="btn" onclick="copyToClipboard('${data.place1}', 'Location copied!')">
+                        <i class="fas fa-copy"></i> Copy Address
+                    </button>
+                </div>
+                
+                <div class="location-card">
+                    <h3 class="location-title">Destination</h3>
+                    <p class="location-address">${data.place2}</p>
+                    <div class="location-coords">
+                        <span class="coord-item">
+                            <i class="fas fa-latitude"></i> ${data.coord2[0].toFixed(4)}°
+                        </span>
+                        <span class="coord-item">
+                            <i class="fas fa-longitude"></i> ${data.coord2[1].toFixed(4)}°
+                        </span>
+                    </div>
+                    <button class="btn" onclick="copyToClipboard('${data.place2}', 'Location copied!')">
+                        <i class="fas fa-copy"></i> Copy Address
+                    </button>
+                </div>
+                
+                <div class="distance-card">
+                    <h3>Distance Between Locations</h3>
+                    <div class="distance-value">${distance.toFixed(2)}</div>
+                    <div class="distance-unit">${unit}</div>
+                    <div class="unit-toggle">
+                        <button class="unit-btn ${!useMiles ? 'active' : ''}" onclick="toggleUnit(false)">
+                            Kilometers
+                        </button>
+                        <button class="unit-btn ${useMiles ? 'active' : ''}" onclick="toggleUnit(true)">
+                            Miles
+                        </button>
+                    </div>
+                </div>`;
+            
+            resultDiv.style.display = 'block';
+            resultDiv.classList.add('fade-in');
+        }
+
+        // Toggle between miles and kilometers
+        function toggleUnit(useMilesFlag) {
+            useMiles = useMilesFlag;
+            const distanceElement = document.querySelector('.distance-value');
+            const unitElement = document.querySelector('.distance-unit');
+            
+            if (distanceElement && unitElement) {
+                const currentValue = parseFloat(distanceElement.textContent);
+                const newValue = useMiles ? currentValue * 1.60934 : currentValue / 1.60934;
+                distanceElement.textContent = newValue.toFixed(2);
+                unitElement.textContent = useMiles ? 'miles' : 'kilometers';
+                
+                // Update active buttons
+                document.querySelectorAll('.unit-btn').forEach(btn => {
+                    btn.classList.toggle('active', 
+                        (btn.textContent === 'Miles') === useMiles);
+                });
+            }
+        }
+
+        // Show the map with markers and route
+        function showMap(data) {
+            // Clear previous markers and route
+            markers.forEach(marker => map.removeLayer(marker));
+            if (routeControl) map.removeControl(routeControl);
+            
+            const coord1 = data.coord1;
+            const coord2 = data.coord2;
+            
+            // Add markers with custom icons
+            const startIcon = L.divIcon({
+                className: 'custom-icon',
+                html: '<div class="marker-pin start"></div><i class="fas fa-map-marker-alt"></i>',
+                iconSize: [30, 42],
+                iconAnchor: [15, 42]
+            });
+            
+            const endIcon = L.divIcon({
+                className: 'custom-icon',
+                html: '<div class="marker-pin end"></div><i class="fas fa-flag-checkered"></i>',
+                iconSize: [30, 42],
+                iconAnchor: [15, 42]
+            });
+            
+            const marker1 = L.marker(coord1, { icon: startIcon }).addTo(map)
+                .bindPopup(`<b>Starting Point</b><br>${data.place1}<br>Lat: ${coord1[0].toFixed(4)}°, Lon: ${coord1[1].toFixed(4)}°`);
+                
+            const marker2 = L.marker(coord2, { icon: endIcon }).addTo(map)
+                .bindPopup(`<b>Destination</b><br>${data.place2}<br>Lat: ${coord2[0].toFixed(4)}°, Lon: ${coord2[1].toFixed(4)}°`);
+            
+            markers = [marker1, marker2];
+            
+            // Add routing
+            routeControl = L.Routing.control({
+                waypoints: [
+                    L.latLng(coord1[0], coord1[1]),
+                    L.latLng(coord2[0], coord2[1])
+                ],
+                routeWhileDragging: false,
+                showAlternatives: false,
+                addWaypoints: false,
+                draggableWaypoints: false,
+                fitSelectedRoutes: false,
+                lineOptions: {
+                    styles: [{
+                        color: '#4361ee',
+                        opacity: 0.8,
+                        weight: 5
+                    }]
+                },
+                createMarker: function() { return null; }
+            }).addTo(map);
+            
+            // Fit map to show both locations with padding
+            const bounds = L.latLngBounds([coord1, coord2]);
+            map.fitBounds(bounds, { padding: [100, 100] });
+            
+            // Add some padding if bounds are too small (same location)
+            if (map.getZoom() > 15) {
+                map.setZoom(15);
+            }
+        }
+
+        // Recent searches functionality
+        function addToRecentSearches(place1, place2) {
+            const searchString = `${place1} → ${place2}`;
+            
+            // Remove if already exists
+            recentSearches = recentSearches.filter(item => item !== searchString);
+            
+            // Add to beginning
+            recentSearches.unshift(searchString);
+            
+            // Keep only last 5
+            if (recentSearches.length > 5) {
+                recentSearches = recentSearches.slice(0, 5);
+            }
+            
+            localStorage.setItem('recentSearches', JSON.stringify(recentSearches));
+            updateRecentSearches();
+        }
+
+        function updateRecentSearches() {
+            const recentList = document.getElementById('recent-list');
+            
+            if (recentSearches.length === 0) {
+                recentList.innerHTML = '<div class="empty-state">No recent searches yet</div>';
+                return;
+            }
+            
+            recentList.innerHTML = '';
+            recentSearches.forEach(search => {
+                const [place1, place2] = search.split(' → ');
+                const item = document.createElement('div');
+                item.className = 'recent-item';
+                item.innerHTML = `<i class="fas fa-search"></i> ${search}`;
+                item.onclick = () => {
+                    document.getElementById('place1').value = place1;
+                    document.getElementById('place2').value = place2;
+                    calculateDistance();
+                };
+                recentList.appendChild(item);
+            });
+        }
+
+        // Utility functions
+        function showToast(message, type = '') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function copyToClipboard(text, message) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(message || 'Copied to clipboard!', 'success');
+            });
+        }
+
+        function locateUser() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const { latitude, longitude } = position.coords;
+                    map.setView([latitude, longitude], 13);
+                    
+                    // Add marker for current location
+                    const marker = L.marker([latitude, longitude], {
+                        icon: L.divIcon({
+                            className: 'custom-icon',
+                            html: '<div class="marker-pin current"></div><i class="fas fa-location-arrow"></i>',
+                            iconSize: [30, 42],
+                            iconAnchor: [15, 42]
+                        })
+                    }).addTo(map)
+                    .bindPopup('<b>Your Location</b><br>Lat: ' + latitude.toFixed(4) + '°, Lon: ' + longitude.toFixed(4) + '°')
+                    .openPopup();
+                    
+                    markers.push(marker);
+                }, error => {
+                    showToast('Could not get your location: ' + error.message, 'error');
+                });
+            } else {
+                showToast('Geolocation is not supported by your browser', 'error');
+            }
+        }
+
+        function toggleFullscreen() {
+            const elem = document.getElementById('map-container');
+            
+            if (!fullscreen) {
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.webkitRequestFullscreen) { /* Safari */
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) { /* IE11 */
+                    elem.msRequestFullscreen();
+                }
+                fullscreen = true;
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) { /* Safari */
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { /* IE11 */
+                    document.msExitFullscreen();
+                }
+                fullscreen = false;
+            }
+        }
+
+        function printResults() {
+            window.print();
+        }
+
+        // Add custom marker styles
+        const style = document.createElement('style');
+        style.textContent = `
+            .custom-icon {
+                position: relative;
+                text-align: center;
+                color: white;
+            }
+            .marker-pin {
+                width: 30px;
+                height: 30px;
+                border-radius: 50% 50% 50% 0;
+                position: absolute;
+                transform: rotate(-45deg);
+                left: 0;
+                top: 0;
+                margin: 0;
+            }
+            .marker-pin.start {
+                background: #4361ee;
+            }
+            .marker-pin.end {
+                background: #f72585;
+            }
+            .marker-pin.current {
+                background: #4cc9f0;
+            }
+            .custom-icon i {
+                position: relative;
+                z-index: 1;
+                font-size: 18px;
+                margin-top: 6px;
+                transform: rotate(45deg);
+            }
+            @media print {
+                body * {
+                    visibility: hidden;
+                }
+                #result, #result * {
+                    visibility: visible;
+                }
+                #result {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    box-shadow: none;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
