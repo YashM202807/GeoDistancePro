@@ -4,8 +4,9 @@ from geopy.distance import geodesic
 import logging
 from functools import lru_cache
 
-app = Flask(__name__)
+app = Flask(__name__,template_folder='.')
 geolocator = Nominatim(user_agent="distance_calculator_v2")
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
