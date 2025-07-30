@@ -6,7 +6,7 @@
 
 ## 🚀 Live Demo
 
-🔗 [Try it Now](#) *(fluffy-madeleine-7f7037.netlify.app)*  
+
 🔗 [GitHub Repository](https://github.com/YashM202807/GeoDistancePro)
 
 ---
